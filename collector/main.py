@@ -1,18 +1,44 @@
 # collector/main.py
 
+import time
+import logging
 import requests
 from datetime import datetime
 
 from db import SessionLocal, init_db, Asset, Price
 
-API_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd"
+# URL CoinGecko de base (sans les paramètres dans la chaîne)
+API_URL = "https://api.coingecko.com/api/v3/coins/markets"
+
+# Intervalle entre deux collectes (en minutes)
+COLLECTION_INTERVAL_MINUTES = 5
+
+# Configuration du logging (afficher des infos lisibles dans la console)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 def fetch_assets():
     """
     Appelle l'API CoinGecko et renvoie la liste des cryptomonnaies.
     """
-    response = requests.get(API_URL, timeout=10)
+    params = {
+        "vs_currency": "usd",
+        "order": "market_cap_desc",        # classer par market cap
+        "per_page": 100,                   # top 100
+        "page": 1,
+        "price_change_percentage": "24h",  # inclure la variation sur 24h
+    }
+
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "crypto-collector-student-project/1.0",
+    }
+
+    response = requests.get(API_URL, params=params, headers=headers, timeout=10)
     response.raise_for_status()
     data = response.json()
     return data  # CoinGecko renvoie directement une liste de cryptos
@@ -30,7 +56,7 @@ def save_assets_to_db(assets_data):
             symbol = item["symbol"].upper()    # ex: "BTC"
             name = item["name"]                # ex: "Bitcoin"
 
-            # Prix et autres infos (déjà en float avec CoinGecko)
+            # Prix et autres infos
             price_usd = item.get("current_price")
             market_cap_usd = item.get("market_cap")
             volume_24h_usd = item.get("total_volume")
@@ -58,26 +84,49 @@ def save_assets_to_db(assets_data):
             session.add(price)
 
         session.commit()
-    except Exception as e:
+        logger.info("Enregistrement en base OK pour %s cryptos", len(assets_data))
+    except Exception:
         session.rollback()
-        print("Erreur lors de l'enregistrement en base :", e)
+        logger.exception("Erreur lors de l'enregistrement en base")
         raise
     finally:
         session.close()
 
 
+def run_collection_once():
+    """
+    Effectue une collecte complète : API -> base de données.
+    """
+    logger.info("Récupération des données depuis CoinGecko…")
+    assets = fetch_assets()
+    logger.info("%s cryptomonnaies récupérées.", len(assets))
+
+    logger.info("Enregistrement en base de données…")
+    save_assets_to_db(assets)
+    logger.info("Collecte terminée ✅")
+
+
 def main():
-    print("Initialisation de la base de données…")
+    logger.info("Initialisation de la base de données…")
     init_db()
 
-    print("Récupération des données depuis CoinGecko…")
-    assets = fetch_assets()
-    print(f"{len(assets)} cryptomonnaies récupérées.")
+    logger.info(
+        "Démarrage de la collecte périodique toutes les %s minutes",
+        COLLECTION_INTERVAL_MINUTES,
+    )
 
-    print("Enregistrement en base de données…")
-    save_assets_to_db(assets)
+    while True:
+        try:
+            run_collection_once()
+        except Exception:
+            # On logue l'erreur mais on ne casse pas la boucle
+            logger.error("La collecte a échoué, on réessaiera au prochain intervalle.")
 
-    print("Terminé ✅")
+        logger.info(
+            "Pause de %s minutes avant la prochaine collecte…",
+            COLLECTION_INTERVAL_MINUTES,
+        )
+        time.sleep(COLLECTION_INTERVAL_MINUTES * 60)
 
 
 if __name__ == "__main__":
