@@ -36,3 +36,45 @@ class IndicatorOut(BaseModel):
     change_24h_pct: float | None = None
     signal: str | None = None  # ex: "bullish", "bearish", "neutral"
 
+class UserBase(BaseModel):
+    email: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserOut(UserBase):
+    id: int
+    is_active: bool
+    role: str
+
+    class Config:
+        orm_mode = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TokenData(BaseModel):
+    email: str | None = None
+
+class TransactionCreate(BaseModel):
+    asset_id: str
+    quantity: float
+
+
+class TransactionOut(BaseModel):
+    id: int
+    asset_id: str
+    quantity: float
+    price_usd: float
+    is_buy: bool
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+
