@@ -1,11 +1,21 @@
-body {
-  margin: 0;
-  padding: 0;
-  background: #0f172a;
-  color: white;
-  font-family: system-ui, sans-serif;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-* {
-  box-sizing: border-box;
+@layer components {
+  .btn-nav {
+    @apply w-full text-left px-4 py-2 rounded-md bg-dark3 border border-[#30363D] text-text hover:bg-dark2 hover:border-primary transition-all duration-200 ease-soft;
+  }
+
+  .btn-logout {
+    @apply w-full text-left px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white transition-all;
+  }
+
+  .card {
+    @apply bg-dark3 p-4 rounded-xl border border-[#30363D] shadow-md hover:shadow-glow-yellow hover:-translate-y-1 transition-all duration-200 ease-soft cursor-pointer;
+  }
+
+  .input-main {
+    @apply w-full p-3 rounded-lg bg-dark border border-[#30363D] text-text placeholder-text2 focus:outline-none focus:border-primary transition-all;
+  }
 }
