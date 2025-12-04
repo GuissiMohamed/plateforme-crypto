@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from pydantic import BaseModel
+from typing import Optional
 
 
 class AssetBase(BaseModel):
@@ -30,11 +31,27 @@ class PriceOut(BaseModel):
 
 class IndicatorOut(BaseModel):
     asset_id: str
-    current_price: float | None = None
-    ma_short: float | None = None
-    ma_long: float | None = None
-    change_24h_pct: float | None = None
-    signal: str | None = None  # ex: "bullish", "bearish", "neutral"
+    current_price: Optional[float] = None
+
+    # Moyennes mobiles simples
+    ma_short: Optional[float] = None
+    ma_long: Optional[float] = None
+
+    # Moyennes mobiles exponentielles
+    ema_short: Optional[float] = None
+    ema_long: Optional[float] = None
+
+    # RSI
+    rsi: Optional[float] = None
+
+    # MACD
+    macd: Optional[float] = None
+    macd_signal: Optional[float] = None
+    macd_hist: Optional[float] = None
+
+    # Variation et signal global
+    change_24h_pct: Optional[float] = None
+    signal: Optional[str] = None
 
 class UserBase(BaseModel):
     email: str

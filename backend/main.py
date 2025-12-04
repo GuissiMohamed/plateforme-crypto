@@ -210,15 +210,15 @@ def get_asset_indicators(
     db: Session = Depends(get_db),
 ):
     """
-    Renvoie quelques indicateurs techniques simples pour une cryptomonnaie :
+    Renvoie des indicateurs techniques pour une crypto :
 
     - current_price : dernier prix connu
-    - ma_short      : moyenne mobile sur 'window_short' derniers points
-    - ma_long       : moyenne mobile sur 'window_long' derniers points
-    - change_24h_pct: variation sur 24h (depuis la dernière ligne Price)
-    - signal        : "bullish" si ma_short > ma_long,
-                      "bearish" si ma_short < ma_long,
-                      "neutral" sinon.
+    - ma_short / ma_long : moyennes mobiles simples
+    - ema_short / ema_long : moyennes mobiles exponentielles (12/26 par défaut)
+    - rsi : Relative Strength Index (14 périodes)
+    - macd, macd_signal, macd_hist : MACD 12/26/9
+    - change_24h_pct : variation 24h (depuis la dernière ligne Price)
+    - signal : "bullish" / "bearish" / "neutral"
     """
 
     # Vérifier que l'asset existe
@@ -226,14 +226,14 @@ def get_asset_indicators(
     if asset is None:
         raise HTTPException(status_code=404, detail="Asset not found")
 
-    # On va chercher suffisamment de points pour calculer les moyennes
-    max_window = max(window_short, window_long)
+    # On va chercher suffisamment de points pour calculer tous les indicateurs
+    max_window = max(window_short, window_long, 26, 50)
 
     prices = (
         db.query(Price)
         .filter(Price.asset_id == asset_id)
         .order_by(Price.timestamp.desc())
-        .limit(max_window)
+        .limit(max_window + 50)  # on prend un peu plus pour MACD/RSI
         .all()
     )
 
@@ -243,7 +243,7 @@ def get_asset_indicators(
     # On remet dans l'ordre chronologique (du plus ancien au plus récent)
     prices = list(reversed(prices))
 
-    # On récupère juste les valeurs de prix (en filtrant les None au cas où)
+    # Liste des prix
     price_values = [p.price_usd for p in prices if p.price_usd is not None]
 
     if not price_values:
@@ -252,73 +252,126 @@ def get_asset_indicators(
         current_price = price_values[-1]  # dernier prix
 
     def simple_moving_average(values, window: int):
-        """
-        Calcule la moyenne mobile simple sur les 'window' derniers points.
-        Renvoie None si on n'a pas assez de données.
-        """
+        """Moyenne mobile simple."""
         if window <= 0 or len(values) < window:
             return None
         subset = values[-window:]
         return sum(subset) / len(subset)
 
+    def ema_series(values, window: int):
+        """Renvoie la série complète d'EMA pour un window donné."""
+        if window <= 0 or len(values) < window:
+            return []
+
+        k = 2 / (window + 1)
+        # On initialise l'EMA avec la SMA des 'window' premiers points
+        sma = sum(values[:window]) / window
+        ema_vals = [sma]
+        ema_prev = sma
+
+        for price in values[window:]:
+            ema_prev = price * k + ema_prev * (1 - k)
+            ema_vals.append(ema_prev)
+
+        return ema_vals
+
+    def rsi(values, window: int = 14):
+        """Calcule un RSI basique sur les 'window' dernières variations."""
+        if len(values) < window + 1:
+            return None
+
+        gains = []
+        losses = []
+        # On ne regarde que les 'window' dernières variations
+        sliced = values[-(window + 1):]
+        for i in range(1, len(sliced)):
+            diff = sliced[i] - sliced[i - 1]
+            if diff >= 0:
+                gains.append(diff)
+                losses.append(0)
+            else:
+                gains.append(0)
+                losses.append(-diff)
+
+        avg_gain = sum(gains) / window
+        avg_loss = sum(losses) / window
+
+        if avg_loss == 0:
+            return 100.0
+
+        rs = avg_gain / avg_loss
+        return 100 - (100 / (1 + rs))
+
+    # -------------------------
+    # SMA
+    # -------------------------
     ma_short = simple_moving_average(price_values, window_short)
     ma_long = simple_moving_average(price_values, window_long)
 
-    # Variation 24h : on prend la dernière valeur disponible
+    # -------------------------
+    # EMA + MACD
+    # -------------------------
+    ema_short_series = ema_series(price_values, 12)
+    ema_long_series = ema_series(price_values, 26)
+
+    ema_short_val = ema_short_series[-1] if ema_short_series else None
+    ema_long_val = ema_long_series[-1] if ema_long_series else None
+
+    macd_val = None
+    macd_signal = None
+    macd_hist = None
+
+    if ema_short_series and ema_long_series:
+        # On aligne les séries sur la longueur de la plus longue
+        # EMA26 commence plus tard → on se base sur sa longueur
+        min_len = min(len(ema_short_series), len(ema_long_series))
+        macd_series = [
+            ema_short_series[-min_len + i] - ema_long_series[-min_len + i]
+            for i in range(min_len)
+        ]
+
+        # Signal = EMA 9 périodes sur la série MACD
+        signal_series = ema_series(macd_series, 9)
+        if macd_series and signal_series:
+            macd_val = macd_series[-1]
+            macd_signal = signal_series[-1]
+            macd_hist = macd_val - macd_signal
+
+    # -------------------------
+    # RSI
+    # -------------------------
+    rsi_val = rsi(price_values, window=14)
+
+    # -------------------------
+    # Variation 24h
+    # -------------------------
     change_24h_pct = prices[-1].change_24h_pct
 
-    # Petit "signal" basique
-    signal = None
+    # -------------------------
+    # Signal global
+    # -------------------------
+    signal = "neutral"
     if ma_short is not None and ma_long is not None:
-        if ma_short > ma_long:
+        if ma_short > ma_long and (rsi_val is None or rsi_val < 70):
             signal = "bullish"
-        elif ma_short < ma_long:
+        elif ma_short < ma_long and (rsi_val is None or rsi_val > 30):
             signal = "bearish"
-        else:
-            signal = "neutral"
 
     return IndicatorOut(
         asset_id=asset_id,
         current_price=current_price,
         ma_short=ma_short,
         ma_long=ma_long,
+        ema_short=ema_short_val,
+        ema_long=ema_long_val,
+        rsi=rsi_val,
+        macd=macd_val,
+        macd_signal=macd_signal,
+        macd_hist=macd_hist,
         change_24h_pct=change_24h_pct,
         signal=signal,
     )
 
-@app.post("/portfolio/buy", response_model=TransactionOut)
-def buy_crypto(
-    tx: TransactionCreate,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_active_user),
-):
-    asset = db.query(Asset).filter(Asset.id == tx.asset_id).first()
-    if not asset:
-        raise HTTPException(404, "Asset not found")
-
-    # Récupérer le prix actuel depuis la base
-    latest_price = (
-        db.query(Price)
-        .filter(Price.asset_id == tx.asset_id)
-        .order_by(Price.timestamp.desc())
-        .first()
-    )
-    if not latest_price:
-        raise HTTPException(404, "No price available")
-
-    transaction = PortfolioTransaction(
-        user_id=user.id,
-        asset_id=tx.asset_id,
-        quantity=tx.quantity,
-        price_usd=latest_price.price_usd,
-        is_buy=True,
-    )
-
-    db.add(transaction)
-    db.commit()
-    db.refresh(transaction)
-
-    return transaction
 
 @app.post("/portfolio/sell", response_model=TransactionOut)
 def sell_crypto(
