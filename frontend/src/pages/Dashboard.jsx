@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import Sparkline from "../components/Sparkline";
 import Skeleton from "../components/Skeleton";
-import {
-  PieChart,
-  Pie,
-  Tooltip,
-  Cell,
-  ResponsiveContainer,
-} from "recharts";
+import { PieChart, Pie, Tooltip, Cell, ResponsiveContainer } from "recharts";
 
 export default function Dashboard() {
   const [portfolio, setPortfolio] = useState(null);
@@ -20,12 +14,12 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       try {
+        // 🔥 ROUTE CORRIGÉE
         const res = await api.get("/portfolio/value");
         const data = res.data;
 
         setPortfolio(data);
 
-        // Charger historique par asset détenu (pas toutes les cryptos)
         const hist = {};
         for (const asset of data.details) {
           const r = await api.get(`/assets/${asset.asset_id}/prices?limit=40`);
@@ -43,7 +37,6 @@ export default function Dashboard() {
     load();
   }, []);
 
-  // LOADING UI
   if (loading || !portfolio) {
     return (
       <div className="space-y-6 p-6 animate-fadeIn">
@@ -69,10 +62,9 @@ export default function Dashboard() {
   }
 
   const assets = portfolio.details.filter((a) => a.quantity > 0);
-
   const totalValue = portfolio.value_usd || 0;
 
-  // Calcul variation globale (sur le premier asset seulement)
+  // Variation globale basée sur le premier asset
   let variation = 0;
   if (assets.length > 0) {
     const first = assets[0].asset_id;
@@ -85,15 +77,14 @@ export default function Dashboard() {
   }
 
   const varClass = variation >= 0 ? "text-green-400" : "text-red-400";
+  const safeFixed = (v) => (typeof v === "number" ? v.toFixed(2) : "0.00");
 
-  // PIE CHART (au moins 2% pour chaque crypto pour lisibilité)
   const pieData = assets.map((a) => ({
     name: a.asset_id.toUpperCase(),
     value: Math.max(a.value_usd, totalValue * 0.02),
   }));
 
-  // Winners / losers (ignore si pas de change %)
-  const winLoss = assets.filter((a) => a.change_24h_pct !== null && a.change_24h_pct !== undefined);
+  const winLoss = assets.filter((a) => a.change_24h_pct != null);
 
   const winners = [...winLoss]
     .sort((a, b) => b.change_24h_pct - a.change_24h_pct)
@@ -103,12 +94,8 @@ export default function Dashboard() {
     .sort((a, b) => a.change_24h_pct - b.change_24h_pct)
     .slice(0, 3);
 
-  const safeFixed = (v) => (typeof v === "number" ? v.toFixed(2) : "0.00");
-
   return (
     <div className="animate-fadeIn space-y-8 p-6">
-
-      {/* HEADER */}
       <div className="card flex justify-between items-center p-6">
         <div>
           <h1 className="text-3xl font-semibold">Dashboard</h1>
@@ -123,7 +110,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* SPARKLINES */}
       <div className="card p-6">
         <h2 className="text-xl font-semibold mb-4">Évolution globale</h2>
 
@@ -139,7 +125,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* PIE CHART */}
       <div className="card p-6 h-80">
         <h2 className="text-xl font-semibold mb-4">Répartition du portefeuille</h2>
         <ResponsiveContainer width="100%" height="100%">
@@ -161,9 +146,7 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
-      {/* WINNERS / LOSERS */}
       <div className="grid md:grid-cols-2 gap-6">
-
         <div className="card p-6">
           <h2 className="text-xl font-semibold mb-4">Top Winners (24h)</h2>
           {winners.map((w) => (
@@ -183,9 +166,7 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-
       </div>
-
     </div>
   );
 }

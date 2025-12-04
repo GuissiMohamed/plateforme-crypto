@@ -2,13 +2,10 @@ import axios from "axios";
 
 export const api = axios.create({
   baseURL: "http://127.0.0.1:8000",
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // 🔐 Gestion du token JWT
-export function setAuthToken(token: string | null) {
+export function setAuthToken(token) {
   if (token) {
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     localStorage.setItem("token", token);
@@ -18,15 +15,14 @@ export function setAuthToken(token: string | null) {
   }
 }
 
-// 🔄 Recharger le token si présent dans le localStorage
-const savedToken = localStorage.getItem("token");
-if (savedToken) setAuthToken(savedToken);
+// 🔄 Charger le token au démarrage
+const saved = localStorage.getItem("token");
+if (saved) setAuthToken(saved);
 
 // ================================
-// 💡 FONCTION SPÉCIALE POUR LE LOGIN
+// 💡 LOGIN CORRECT
 // ================================
-
-export async function loginRequest(email: string, password: string) {
+export async function loginRequest(email, password) {
   const form = new URLSearchParams();
   form.append("username", email);
   form.append("password", password);

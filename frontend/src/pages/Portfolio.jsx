@@ -11,9 +11,9 @@ export default function Portfolio() {
   const refresh = async () => {
     setLoading(true);
     try {
+      // 🔥 ROUTE CORRIGÉE
       const res = await api.get("/portfolio/value");
 
-      // Charger historique pour chaque crypto du portefeuille
       const hist = {};
       for (const a of res.data.details) {
         const r = await api.get(`/assets/${a.asset_id}/prices?limit=30`);
@@ -35,7 +35,6 @@ export default function Portfolio() {
 
   const safeFixed = (v) => (typeof v === "number" ? v.toFixed(2) : "0.00");
 
-  // LOADING UI
   if (loading || !portfolio) {
     return (
       <div className="space-y-6 animate-fadeIn">
@@ -53,22 +52,16 @@ export default function Portfolio() {
 
   return (
     <div className="animate-fadeIn space-y-6">
-
-      {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-semibold">💼 Portefeuille</h1>
         <button onClick={refresh} className="btn-nav">🔄 Actualiser</button>
       </div>
 
-      {/* VALEUR TOTALE */}
       <div className="card p-6">
         <h2 className="text-xl font-semibold mb-2">Valeur totale</h2>
-        <p className="text-3xl font-bold">
-          {safeFixed(portfolio.value_usd)} $
-        </p>
+        <p className="text-3xl font-bold">{safeFixed(portfolio.value_usd)} $</p>
       </div>
 
-      {/* TABLEAU DES POSITIONS */}
       <div className="card p-6">
         <h2 className="text-xl font-semibold mb-4">Vos positions</h2>
 
@@ -98,16 +91,10 @@ export default function Portfolio() {
                       <td className="py-3 font-semibold">
                         {a.asset_id.toUpperCase()}
                       </td>
-
                       <td className="py-3">{a.quantity}</td>
-
                       <td className="py-3">{safeFixed(a.value_usd)} $</td>
 
-                      <td
-                        className={`py-3 font-semibold ${
-                          isUp ? "text-green-400" : "text-red-400"
-                        }`}
-                      >
+                      <td className={`py-3 font-semibold ${isUp ? "text-green-400" : "text-red-400"}`}>
                         {isUp ? "▲" : "▼"} {safeFixed(change)}%
                       </td>
 
@@ -116,7 +103,6 @@ export default function Portfolio() {
                       </td>
 
                       <td className="py-3 text-right">
-                        {/* OUVERTURE PAGE TRADE */}
                         <button
                           className="btn-nav mr-2"
                           onClick={() =>

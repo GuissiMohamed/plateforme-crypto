@@ -94,4 +94,32 @@ class TransactionOut(BaseModel):
     class Config:
         from_attributes = True
 
+class AlertCreate(BaseModel):
+    asset_id: str
+    alert_type: str  # "above", "below", "change_24h"
+    target_value: float
+
+
+class AlertOut(BaseModel):
+    id: int
+    asset_id: str
+    alert_type: str
+    target_value: float
+    triggered: bool
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class NotificationOut(BaseModel):
+    id: int
+    message: str
+    created_at: datetime
+    is_read: bool
+
+    class Config:
+        orm_mode = True
+
+
+
 

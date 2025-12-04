@@ -74,6 +74,60 @@ class PortfolioTransaction(Base):
     user = relationship("User")
     asset = relationship("Asset")
 
+class Alert(Base):
+    __tablename__ = "alerts"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    asset_id = Column(String, ForeignKey("assets.id"), nullable=False)
+
+    # Type d'alerte : "above", "below", "change_24h"
+    alert_type = Column(String, nullable=False)
+
+    # Valeur ciblée (ex: BTC > 50000, ADA < 0.40, etc.)
+    target_value = Column(Float, nullable=False)
+
+    # L'alerte peut être déclenchée une seule fois
+    triggered = Column(Boolean, default=False)
+
+    # Pour historique
+    created_at = Column(DateTime, default=datetime.utcnow)
+    triggered_at = Column(DateTime)
+
+    # Relations ORM (pas obligatoire mais propre)
+    user = relationship("User")
+    asset = relationship("Asset")
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # ⭐ CHAMP MANQUANT AJOUTÉ
+    asset_id = Column(String, ForeignKey("assets.id"), nullable=True)
+
+    message = Column(String, nullable=False)
+
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+    asset = relationship("Asset")
+
+
+# Utilisé par auth.py pour obtenir une session DB
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+
 
 def init_db():
     """
