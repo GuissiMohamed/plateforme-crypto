@@ -2,10 +2,10 @@ export default function Sidebar({ onPageSelect, toggleTheme }) {
   return (
     <div className="w-64 bg-dark2 border-r border-dark3 flex flex-col p-4">
       
-      {/* LOGO / TITLE */}
+      {/* LOGO */}
       <h2 className="text-2xl mb-6 font-semibold text-text">CryptoApp</h2>
 
-      {/* MENU */}
+      {/* NAVIGATION */}
       <button className="btn-nav" onClick={() => onPageSelect("dashboard")}>
         🏠 Dashboard
       </button>
@@ -16,6 +16,10 @@ export default function Sidebar({ onPageSelect, toggleTheme }) {
 
       <button className="btn-nav" onClick={() => onPageSelect("portfolio")}>
         💼 Portefeuille
+      </button>
+
+      <button className="btn-nav" onClick={() => onPageSelect("transactions")}>
+        📜 Transactions
       </button>
 
       <button className="btn-nav" onClick={() => onPageSelect("profile")}>

@@ -7,6 +7,7 @@ import Portfolio from "./pages/Portfolio";
 import Trade from "./pages/Trade";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import Transactions from "./pages/Transactions";
 import { api, setAuthToken, loginRequest } from "./api";
 
 export default function App() {
@@ -86,6 +87,7 @@ export default function App() {
             page === "trade" ? `Trader — ${selectedAsset}` :
             page === "portfolio" ? "💼 Portefeuille" :
             page === "profile" ? "👤 Profil" : ""
+            
           }
         />
 
@@ -102,6 +104,8 @@ export default function App() {
         )}
         {page === "portfolio" && <Portfolio />}
         {page === "profile" && <Profile onLogout={handleLogout} />}
+        {page === "transactions" && <Transactions />}
+
       </div>
     </div>
   );

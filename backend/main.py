@@ -9,6 +9,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
+
 from db import (
     SessionLocal,
     init_db,
@@ -32,7 +33,12 @@ from schemas import (
     AlertCreate,
     AlertOut,
     NotificationOut,
+    UserUpdateEmail,
+    UserUpdatePassword,
+    UserUpdateProfile,
+    DiscordWebhookUpdate,
 )
+
 
 from auth import (
     get_current_active_user,
@@ -41,6 +47,7 @@ from auth import (
     authenticate_user,
     create_access_token,
 )
+
 
 
 # --------------------------------------------------------------------
@@ -104,19 +111,131 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/auth/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     user = authenticate_user(db, form_data.username, form_data.password)
 
     if not user:
         raise HTTPException(401, "Incorrect email or password")
 
     token = create_access_token({"sub": user.email})
-    return Token(access_token=token, token_type="bearer")
+    return {"access_token": token, "token_type": "bearer"}
 
 
+
+
+
+# ==========================
+# PROFIL : EMAIL
+# ==========================
+@app.put("/users/me/email", response_model=UserOut)
+def update_email(
+    payload: UserUpdateEmail,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    # Vérifier le mot de passe
+    if not authenticate_user(db, user.email, payload.password):
+        raise HTTPException(400, "Mot de passe incorrect")
+
+    # Vérifier que l’email n’est pas déjà utilisé
+    existing = db.query(User).filter(User.email == payload.new_email).first()
+    if existing and existing.id != user.id:
+        raise HTTPException(400, "Cet email est déjà utilisé")
+
+    user.email = payload.new_email
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+# ==========================
+# PROFIL : MOT DE PASSE
+# ==========================
+@app.put("/users/me/password")
+def update_password(
+    payload: UserUpdatePassword,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    # Vérifier ancien mot de passe
+    if not authenticate_user(db, user.email, payload.old_password):
+        raise HTTPException(400, "Ancien mot de passe incorrect")
+
+    user.hashed_password = get_password_hash(payload.new_password)
+    db.commit()
+    return {"status": "ok"}
+
+
+# ==========================
+# PROFIL : INFOS AFFICHÉES
+# ==========================
+@app.put("/users/me/profile", response_model=UserOut)
+def update_profile(
+    payload: UserUpdateProfile,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    if payload.display_name is not None:
+        user.display_name = payload.display_name.strip() or None
+    if payload.avatar_url is not None:
+        user.avatar_url = payload.avatar_url.strip() or None
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+# ==========================
+# PROFIL : WEBHOOK DISCORD
+# ==========================
+@app.put("/users/me/discord-webhook", response_model=UserOut)
+def update_discord_webhook(
+    payload: DiscordWebhookUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    # None ou "" → on supprime
+    if not payload.discord_webhook_url:
+        user.discord_webhook_url = None
+    else:
+        user.discord_webhook_url = payload.discord_webhook_url.strip()
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+# ==========================
+# PROFIL : SUPPRIMER COMPTE
+# ==========================
+@app.delete("/users/me")
+def delete_me(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    # On supprime d’abord les objets liés (transactions, alertes, notifs)
+    db.query(PortfolioTransaction).filter(
+        PortfolioTransaction.user_id == user.id
+    ).delete()
+
+    db.query(Alert).filter(Alert.user_id == user.id).delete()
+    db.query(Notification).filter(Notification.user_id == user.id).delete()
+
+    db.delete(user)
+    db.commit()
+
+    return {"status": "deleted"}
+
+
+# ==========================
+# PROFIL : GET INFOS USER
+# ==========================
 @app.get("/users/me", response_model=UserOut)
-def read_current_user(current_user: User = Depends(get_current_active_user)):
-    return current_user
+def get_me(user: User = Depends(get_current_active_user)):
+    return user
 
 
 # --------------------------------------------------------------------

@@ -54,7 +54,15 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    role = Column(String, default="user")  # "user" ou "admin"
+    role = Column(String, default="user")
+
+    # Champs de profil
+    display_name = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
+    discord_webhook_url = Column(String, nullable=True)
+
+
+
 
 
 class PortfolioTransaction(Base):
