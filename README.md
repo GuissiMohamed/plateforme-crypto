@@ -1,50 +1,195 @@
-# Plateforme de Surveillance et d’Analyse des Marchés de Cryptomonnaies
+📝 README – Plateforme Crypto
+🚀 Présentation
 
-Ce projet consiste à concevoir et développer une plateforme complète de suivi, d’analyse
-et de prévision des marchés de cryptomonnaies. La plateforme repose sur deux applications :
+Cette application est une plateforme d’analyse crypto complète comprenant :
 
-- Une **application console** de collecte et de gestion des données (APIs publiques de cryptomonnaies).
-- Une **application web** interactive d’analyse, de visualisation et de simulation (tableaux de bord, alertes, portefeuille virtuel).
+Une API backend FastAPI
 
-## Objectifs
+Une interface frontend React
 
-- Collecter périodiquement les données de marché (prix, volume, capitalisation, variations…).
-- Stocker ces données dans une base de données.
-- Fournir une API backend pour exposer les données aux clients web.
-- Offrir une interface web permettant la visualisation, la configuration d’alertes,
-  la prévision simple et la gestion d’un portefeuille virtuel.
-- Mettre en place un processus complet de développement logiciel (Agile, tests, CI/CD, DevOps).
+Un collector CryptoRabbit (collecte des prix via API externe)
 
-## Stack technique (prévisionnelle)
+Un système d’alertes / notifications Discord
 
-- **Backend / Collector** : Python, FastAPI, Celery
-- **Base de données** : PostgreSQL
-- **Frontend** : React
-- **Conteneurisation** : Docker
-- **Orchestration** : Kubernetes (Minikube / Kind)
-- **CI/CD** : GitHub Actions ou GitLab CI
-- **Monitoring** : Prometheus, Grafana
+Une base de données PostgreSQL
 
-## Structure du projet
+Une orchestration Docker complète
 
-- `collector/` : application console de collecte des données
-- `backend/`   : API backend (FastAPI)
-- `frontend/`  : application web (React)
-- `docs/`      : documentation, diagrammes, schémas
-- `devops/`    : scripts et configurations Docker / Kubernetes / CI/CD
+🔧 1. Technologies utilisées
+Composant	Technologie
+Frontend	React + TailwindCSS
+Backend	FastAPI + SQLAlchemy
+Base de données	PostgreSQL
+Collecte prix	CryptoRabbit (Python)
+Alertes	Alert Checker Python + Discord Webhook
+Conteneurs	Docker & Docker Compose
+📦 2. Installation (mode manuel)
+2.1. Cloner le projet
+git clone https://github.com/GuissiMohamed/plateforme-crypto.git
+cd plateforme-crypto
 
-## Méthodologie
+2.2. Installer la base de données PostgreSQL
+MacOS (Homebrew) :
+brew install postgresql
+brew services start postgresql
 
-Le projet suit une approche Agile (Scrum ou Kanban) avec :
+Créer l’utilisateur + base :
+psql
+CREATE USER crypto_user WITH PASSWORD 'crypto_pass';
+CREATE DATABASE cryptodb OWNER crypto_user;
 
-- backlog de user stories,
-- gestion des tâches via un tableau (Trello, GitHub Projects, GitLab Boards),
-- documentation continue.
+2.3. Installer l’environnement backend
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
 
-## À faire (roadmap haute niveau)
 
-- Phase 1 : Collecte des données et stockage en base.
-- Phase 2 : API backend (authentification, endpoints de données, alertes).
-- Phase 3 : Application web (visualisation, portefeuille virtuel, alertes).
-- Phase 4 : Tests (unitaires, intégration, performance, sécurité).
-- Phase 5 : DevOps (Docker, CI/CD, Kubernetes, monitoring).
+Toutes les dépendances seront installées : FastAPI, SQLAlchemy, bcrypt, passlib, pydantic, requests, etc.
+
+2.4. Installer le frontend
+cd ../frontend
+npm install
+
+▶️ 3. Démarrage manuel de l’application
+3.1. Démarrer le backend
+cd backend
+source .venv/bin/activate
+uvicorn main:app --reload
+
+
+Backend accessible ici :
+
+👉 http://127.0.0.1:8000
+
+👉 http://127.0.0.1:8000/docs
+ (Swagger)
+
+3.2. Démarrer le frontend
+cd frontend
+npm start
+
+
+Frontend accessible ici :
+
+👉 http://localhost:3000
+
+3.3. Démarrer CryptoRabbit (collector)
+cd collector
+source ../backend/.venv/bin/activate
+python main.py
+
+
+Ce service :
+
+✔ récupère les prix de +100 cryptos
+✔ met à jour la base toutes les 5 minutes
+✔ enregistre MarketCap, Volume, Price, Change24h
+
+3.4. Démarrer l’Alert Checker
+cd backend
+source .venv/bin/activate
+python alert_checker.py
+
+
+Ce service :
+
+✔ surveille les alertes (above / below / change_24h)
+✔ envoie des notifications dans la DB
+✔ envoie dans Discord via webhook si configuré
+
+🐳 4. Démarrage via Docker (recommandé)
+
+Le projet inclut un docker-compose.yml permettant de lancer :
+
+✔ backend
+✔ frontend
+✔ PostgreSQL
+✔ collector
+✔ alert checker
+
+🌐 Démarrer toute la plateforme :
+docker-compose up --build
+
+
+Ensuite :
+
+Service	URL
+Backend FastAPI	http://localhost:8000
+
+Swagger	http://localhost:8000/docs
+
+Frontend React	http://localhost:3000
+
+PostgreSQL	localhost:5432
+Collector CryptoRabbit	(service Python auto-démarré)
+Alert Checker	(service Python auto-démarré)
+⚙️ 5. Variables d’environnement
+
+Créer un fichier .env à la racine :
+
+POSTGRES_USER=crypto_user
+POSTGRES_PASSWORD=crypto_pass
+POSTGRES_DB=cryptodb
+
+DATABASE_URL=postgresql+psycopg2://crypto_user:crypto_pass@db:5432/cryptodb
+
+SECRET_KEY="super_secret_key_change_me"
+
+📂 6. Structure du projet
+plateforme-crypto/
+│
+├── backend/
+│   ├── main.py
+│   ├── auth.py
+│   ├── db.py
+│   ├── alert_checker.py
+│   ├── schemas.py
+│   ├── requirements.txt
+│
+├── collector/
+│   ├── core.py
+│   ├── main.py
+│   ├── db.py
+│
+├── frontend/
+│   ├── src/
+│   ├── package.json
+│
+├── docker-compose.yml
+├── README.md
+
+🧪 7. Tests API rapides
+Vérifier que le backend tourne :
+curl http://localhost:8000/health
+
+
+Réponse :
+
+{"status": "ok"}
+
+Tester le login :
+curl -X POST http://localhost:8000/auth/login \
+  -d "username=test@test.com&password=123456"
+
+🚀 8. Déploiement
+
+Tu pourras facilement déployer via :
+
+✔ Docker Compose sur un VPS
+✔ Railway / Render
+✔ AWS ECS
+✔ Heroku (container)
+
+Je peux te préparer un script de déploiement, si tu veux.
+
+🎯 9. Commandes utiles
+Redémarrer PostgreSQL (MacOS) :
+brew services restart postgresql
+
+Supprimer tout Docker :
+docker-compose down -v
+
+Rebuild complet :
+docker-compose up --build
