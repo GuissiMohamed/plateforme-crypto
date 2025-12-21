@@ -1,0 +1,34 @@
+@startuml
+
+node "Frontend" {
+  component "React App"
+}
+
+node "Backend" {
+  component "FastAPI"
+}
+
+node "Database" {
+  component "PostgreSQL"
+}
+
+node "Background Services" {
+  component "Crypto Collector"
+  component "Alert Checker"
+}
+
+node "External Services" {
+  component "Crypto API"
+  component "Discord Webhook"
+}
+
+"React App" --> "FastAPI"
+"FastAPI" --> "PostgreSQL"
+
+"Crypto Collector" --> "Crypto API"
+"Crypto Collector" --> "PostgreSQL"
+
+"Alert Checker" --> "PostgreSQL"
+"Alert Checker" --> "Discord Webhook"
+
+@enduml

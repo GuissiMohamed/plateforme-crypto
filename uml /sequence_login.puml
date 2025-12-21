@@ -1,0 +1,13 @@
+@startuml
+actor User
+participant Frontend
+participant Backend
+database DB
+
+User -> Frontend : saisit email / mot de passe
+Frontend -> Backend : POST /auth/login
+Backend -> DB : vérifier utilisateur
+DB --> Backend : utilisateur valide
+Backend --> Frontend : JWT token
+Frontend -> Frontend : stocker token
+@enduml

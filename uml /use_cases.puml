@@ -1,0 +1,21 @@
+@startuml
+left to right direction
+
+actor User
+actor Admin
+
+User --> (S'inscrire)
+User --> (Se connecter)
+User --> (Consulter le marché)
+User --> (Voir détails d'une crypto)
+User --> (Acheter une crypto)
+User --> (Vendre une crypto)
+User --> (Consulter le portefeuille)
+User --> (Créer une alerte)
+User --> (Recevoir une notification)
+User --> (Modifier le profil)
+User --> (Supprimer le compte)
+
+Admin --> (Gérer les utilisateurs)
+Admin --> (Superviser la plateforme)
+@enduml

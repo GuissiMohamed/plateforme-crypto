@@ -1,0 +1,12 @@
+@startuml
+participant AlertChecker
+database DB
+participant Backend
+participant Discord
+
+AlertChecker -> DB : lire alertes
+AlertChecker -> DB : lire prix
+AlertChecker -> Backend : créer notification
+Backend -> DB : sauvegarder notification
+Backend -> Discord : envoyer webhook
+@enduml

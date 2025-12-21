@@ -1,0 +1,60 @@
+@startuml
+
+class User {
+  id: int
+  email: string
+  hashed_password: string
+  display_name: string
+  avatar_url: string
+  discord_webhook_url: string
+  role: string
+  is_active: boolean
+}
+
+class Asset {
+  id: string
+  symbol: string
+  name: string
+}
+
+class Price {
+  id: int
+  price_usd: float
+  market_cap_usd: float
+  volume_24h_usd: float
+  change_24h_pct: float
+  timestamp: datetime
+}
+
+class PortfolioTransaction {
+  id: int
+  quantity: float
+  price_usd: float
+  is_buy: boolean
+  timestamp: datetime
+}
+
+class Alert {
+  id: int
+  alert_type: string
+  target_value: float
+  triggered: boolean
+  created_at: datetime
+  triggered_at: datetime
+}
+
+class Notification {
+  id: int
+  message: string
+  is_read: boolean
+  created_at: datetime
+}
+
+User "1" -- "0..*" PortfolioTransaction
+User "1" -- "0..*" Alert
+User "1" -- "0..*" Notification
+Asset "1" -- "0..*" Price
+Asset "1" -- "0..*" PortfolioTransaction
+Alert "1" --> "0..*" Notification
+
+@enduml

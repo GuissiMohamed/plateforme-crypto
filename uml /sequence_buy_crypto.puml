@@ -1,0 +1,12 @@
+@startuml
+actor User
+participant Frontend
+participant Backend
+database DB
+
+User -> Frontend : cliquer "Acheter"
+Frontend -> Backend : POST /portfolio/buy
+Backend -> DB : récupérer dernier prix
+Backend -> DB : enregistrer transaction
+Backend --> Frontend : transaction confirmée
+@enduml
