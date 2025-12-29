@@ -21,7 +21,7 @@ cd ..
 echo "➡️  Lancement du collector (CryptoRabbit)..."
 cd collector || exit
 source ../backend/.venv/bin/activate
-python main.py &
+python -m collector.main >> collector.log 2>&1 &
 COLLECTOR_PID=$!
 cd ..
 

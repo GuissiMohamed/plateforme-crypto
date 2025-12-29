@@ -29,10 +29,16 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # ============================================================
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password.strip()[:72])
+    password_bytes = password.strip().encode("utf-8")
+    password_bytes = password_bytes[:72]  # limite bcrypt réelle
+    return pwd_context.hash(password_bytes)
+
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain.strip()[:72], hashed)
+    plain_bytes = plain.strip().encode("utf-8")
+    plain_bytes = plain_bytes[:72]
+    return pwd_context.verify(plain_bytes, hashed)
+
 
 # ============================================================
 # TOKEN CREATION

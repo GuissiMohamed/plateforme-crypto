@@ -1,8 +1,9 @@
 # collector/tasks.py
 
 from celery import Celery
-from db import init_db
-from core import collect_once
+from collector.db import init_db
+from collector.core import collect_once
+
 
 # Configuration de l'application Celery
 # 'broker' : adresse de RabbitMQ (guest/guest est le compte par défaut)

@@ -26,10 +26,7 @@ export default function Sidebar({ onPageSelect, toggleTheme }) {
         👤 Profil
       </button>
 
-      {/* THEME SWITCH */}
-      <button className="btn-nav" onClick={toggleTheme}>
-        🌗 Mode
-      </button>
+      
 
       {/* LOGOUT */}
       <button 
