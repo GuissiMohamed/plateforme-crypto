@@ -4,6 +4,7 @@ __pycache__/
 .env
 .venv/
 venv/
+k8s/base/secret.env
 
 # Node / React
 node_modules/

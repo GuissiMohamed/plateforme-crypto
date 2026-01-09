@@ -3,9 +3,22 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - app-config.yaml
-  - db-secret.yaml
   - postgres.yaml
   - backend.yaml
   - frontend.yaml
   - collector.yaml
   - alert-checker.yaml
+  - redis.yaml
+  - ingress.yaml
+  - hpa-backend.yaml
+  - grafana-dashboard-backend.yaml
+  - backend-servicemonitor.yaml
+
+secretGenerator:
+  - name: db-secret
+    envs:
+      - secret.env
+      - secret.env.example
+
+generatorOptions:
+  disableNameSuffixHash: true

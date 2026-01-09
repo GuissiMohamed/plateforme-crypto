@@ -1,35 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: redis
   namespace: plateforme-crypto
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: frontend
+      app: redis
   template:
     metadata:
       labels:
-        app: frontend
+        app: redis
     spec:
       containers:
-        - name: frontend
-          image: plateforme-crypto-frontend
+        - name: redis
+          image: redis:7-alpine
           ports:
-            - containerPort: 80
-          envFrom:
-            - configMapRef:
-                name: app-config
+            - containerPort: 6379
+          args: ["--appendonly", "yes"]
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend
+  name: redis
   namespace: plateforme-crypto
 spec:
   selector:
-    app: frontend
+    app: redis
   ports:
-    - port: 80
-      targetPort: 80
+    - port: 6379
+      targetPort: 6379
