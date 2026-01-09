@@ -3,9 +3,10 @@
 from typing import List, Optional
 from datetime import datetime, timedelta
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -98,6 +99,11 @@ def on_startup():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # --------------------------------------------------------------------

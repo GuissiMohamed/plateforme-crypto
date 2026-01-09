@@ -25,13 +25,13 @@ spec:
                 name: db-secret
           readinessProbe:
             httpGet:
-              path: /
+              path: /health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /
+              path: /health
               port: 8000
             initialDelaySeconds: 20
             periodSeconds: 20

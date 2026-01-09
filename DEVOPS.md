@@ -43,7 +43,7 @@ kubectl apply -k k8s
 
 ## Observabilité
 
-- **Métriques** : Prometheus scrape Prometheus, Postgres exporter, et le backend si `/metrics` est exposé.
+- **Métriques** : Prometheus scrape Prometheus, Postgres exporter, et le backend via `/metrics`.
 - **Logs** : Loki + Promtail (collecte des logs de pods).
 - **Alertes** : Alertmanager avec une règle d’alerte `ServiceDown`.
 
