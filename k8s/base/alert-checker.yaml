@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alert-checker
+  namespace: plateforme-crypto
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alert-checker
+  template:
+    metadata:
+      labels:
+        app: alert-checker
+    spec:
+      containers:
+        - name: alert-checker
+          image: plateforme-crypto-backend
+          command: ["python", "alert_checker.py"]
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: db-secret

@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: plateforme-crypto
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: pg-backup
+              image: postgres:15
+              env:
+                - name: POSTGRES_DB
+                  valueFrom:
+                    secretKeyRef:
+                      name: db-secret
+                      key: POSTGRES_DB
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: db-secret
+                      key: POSTGRES_USER
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: db-secret
+                      key: POSTGRES_PASSWORD
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  export PGPASSWORD="$POSTGRES_PASSWORD"
+                  TIMESTAMP=$(date +"%Y%m%d%H%M")
+                  pg_dump -h postgres -U "$POSTGRES_USER" "$POSTGRES_DB" > /backups/db/backup-$TIMESTAMP.sql
+                  find /backups/db -type f -mtime +7 -delete
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backups
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: backup-storage
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: config-backup
+  namespace: plateforme-crypto
+spec:
+  schedule: "30 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: config-backup
+              image: busybox:1.36
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  TIMESTAMP=$(date +"%Y%m%d%H%M")
+                  tar -czf /backups/config/config-$TIMESTAMP.tgz /config
+                  find /backups/config -type f -mtime +7 -delete
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backups
+                - name: app-config
+                  mountPath: /config
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: backup-storage
+            - name: app-config
+              configMap:
+                name: app-config
