@@ -1,6 +1,6 @@
 # backend/auth.py
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -25,14 +25,25 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # ============================================================
-# PASSWORD HASHING
+# PASSWORD HASHING (bcrypt safe)
 # ============================================================
 
+def _bcrypt_safe_secret(secret: str) -> str:
+    """
+    bcrypt limite le mot de passe à 72 BYTES (pas 72 caractères).
+    Donc on tronque en bytes UTF-8, puis on redécode.
+    """
+    if not secret:
+        return ""
+    b = secret.strip().encode("utf-8")
+    b = b[:72]
+    return b.decode("utf-8", errors="ignore")
+
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password.strip()[:72])
+    return pwd_context.hash(_bcrypt_safe_secret(password))
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain.strip()[:72], hashed)
+    return pwd_context.verify(_bcrypt_safe_secret(plain), hashed)
 
 # ============================================================
 # TOKEN CREATION
@@ -40,7 +51,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(data: dict, expires: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires or timedelta(minutes=60))
+    expire = datetime.now(timezone.utc) + (expires or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -65,11 +76,11 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> User:
 
     exception = HTTPException(
-        status_code=401,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid authentication token",
         headers={"WWW-Authenticate": "Bearer"},
     )
@@ -88,16 +99,15 @@ async def get_current_user(
 
     return user
 
-
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-):
+    current_user: User = Depends(get_current_user),
+) -> User:
     if not current_user.is_active:
-        raise HTTPException(400, "Inactive user")
+        raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 async def get_current_admin(
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ) -> User:
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not enough permissions")

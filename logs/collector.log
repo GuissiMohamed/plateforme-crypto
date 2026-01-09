@@ -1,0 +1,2 @@
+/Users/guississ/Documents/GitHub/plateforme-crypto/collector/main.py:25: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  print(f"[{datetime.utcnow()}] Pause de {interval_minutes} minute(s)…")

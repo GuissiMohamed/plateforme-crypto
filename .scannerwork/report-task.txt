@@ -1,0 +1,6 @@
+projectKey=plateforme-crypto
+serverUrl=http://localhost:9001
+serverVersion=26.1.0.118079
+dashboardUrl=http://localhost:9001/dashboard?id=plateforme-crypto
+ceTaskId=828b2d79-019d-44f1-937d-8a3073a8d14d
+ceTaskUrl=http://localhost:9001/api/ce/task?id=828b2d79-019d-44f1-937d-8a3073a8d14d
