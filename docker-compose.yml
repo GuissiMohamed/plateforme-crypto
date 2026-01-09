@@ -5,48 +5,71 @@ services:
     image: postgres:15
     container_name: crypto_db
     environment:
-      POSTGRES_DB: cryptodb
-      POSTGRES_USER: crypto_user
-      POSTGRES_PASSWORD: crypto_pass
+      POSTGRES_DB: ${POSTGRES_DB:-cryptodb}
+      POSTGRES_USER: ${POSTGRES_USER:-crypto_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crypto_pass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:7-alpine
+    container_name: crypto_redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
   backend:
-    build: ./backend
+    build:
+      context: ./backend
     container_name: crypto_backend
     depends_on:
       - db
+      - redis
     environment:
-      DATABASE_URL: postgresql+psycopg2://crypto_user:crypto_pass@db:5432/cryptodb
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-crypto_user}:${POSTGRES_PASSWORD:-crypto_pass}@db:5432/${POSTGRES_DB:-cryptodb}
+      REDIS_URL: redis://redis:6379/0
     ports:
       - "8000:8000"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: dev
     container_name: crypto_frontend
     depends_on:
       - backend
     ports:
       - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
 
   collector:
-    build: ./collector
+    build:
+      context: ./collector
     container_name: crypto_collector
     depends_on:
       - db
+      - redis
     environment:
-      DATABASE_URL: postgresql+psycopg2://crypto_user:crypto_pass@db:5432/cryptodb
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-crypto_user}:${POSTGRES_PASSWORD:-crypto_pass}@db:5432/${POSTGRES_DB:-cryptodb}
+      REDIS_URL: redis://redis:6379/0
 
   alert_checker:
-    build: ./backend
+    build:
+      context: ./backend
     container_name: crypto_alerts
     depends_on:
       - db
+      - redis
     command: ["python", "alert_checker.py"]
     environment:
-      DATABASE_URL: postgresql+psycopg2://crypto_user:crypto_pass@db:5432/cryptodb
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-crypto_user}:${POSTGRES_PASSWORD:-crypto_pass}@db:5432/${POSTGRES_DB:-cryptodb}
+      REDIS_URL: redis://redis:6379/0
 
 volumes:
   postgres_data:
+  redis_data:

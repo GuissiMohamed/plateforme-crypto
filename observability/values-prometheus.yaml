@@ -1,0 +1,74 @@
+fullnameOverride: kube-prometheus-stack
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+grafana:
+  enabled: true
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s/grafana/"
+      serve_from_sub_path: true
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$2
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    hosts:
+      - grafana.plateforme-crypto.local
+    path: /()(.*)
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+    datasources:
+      enabled: true
+
+defaultRules:
+  create: true
+
+additionalPrometheusRulesMap:
+  plateforme-crypto-alerts:
+    groups:
+      - name: plateforme-crypto.rules
+        rules:
+          - alert: HighCPUUsage
+            expr: rate(container_cpu_usage_seconds_total[5m]) > 0.8
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "CPU élevée"
+              description: "Le CPU dépasse 80% sur les pods."
+          - alert: HighMemoryUsage
+            expr: container_memory_working_set_bytes / container_spec_memory_limit_bytes > 0.8
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Mémoire élevée"
+              description: "La mémoire dépasse 80% sur les pods."
+          - alert: PodRestarts
+            expr: increase(kube_pod_container_status_restarts_total[10m]) > 0
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Restart de pod"
+              description: "Un conteneur a redémarré récemment."
+          - alert: Api5xxRate
+            expr: sum(rate(http_requests_total{status=~"5.."}[5m])) > 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Erreurs 5xx API"
+              description: "Le taux d'erreurs 5xx est supérieur à 0."

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: plateforme-crypto
+data:
+  APP_ENV: production
+  LOG_LEVEL: info
+  FRONTEND_PORT: "80"
+  BACKEND_PORT: "8000"
+  API_BASE_URL: "/api"

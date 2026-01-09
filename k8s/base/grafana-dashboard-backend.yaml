@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-backend-dashboard
+  namespace: plateforme-crypto
+  labels:
+    grafana_dashboard: "1"
+data:
+  backend-overview.json: |
+    {
+      "uid": "backend-overview",
+      "title": "Backend Overview",
+      "schemaVersion": 39,
+      "version": 1,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "HTTP Requests (rate)",
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total[5m]))",
+              "legendFormat": "requests/s"
+            }
+          ],
+          "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 }
+        }
+      ]
+    }
