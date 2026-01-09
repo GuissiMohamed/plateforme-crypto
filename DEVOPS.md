@@ -41,6 +41,11 @@ kubectl apply -k k8s
 - Frontend : NodePort `30080`
 - Grafana : NodePort `30090`
 
+Pour `kind`, utilisez un port-forward si le NodePort n'est pas exposé :
+```bash
+kubectl -n plateforme-crypto port-forward svc/grafana 3000:3000
+```
+
 ## Observabilité
 
 - **Métriques** : Prometheus scrape Prometheus, Postgres exporter, et le backend via `/metrics`.
