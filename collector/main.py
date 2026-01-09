@@ -1,10 +1,8 @@
-# collector/main.py
-
 import time
 from datetime import datetime
 
-from db import init_db
-from core import collect_once
+from collector.db import init_db
+from collector.core import collect_once
 
 
 def main():

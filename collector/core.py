@@ -4,7 +4,7 @@ import requests
 from datetime import datetime
 
 # ⚠️ Pas d'import Alert / Notification ici !
-from db import SessionLocal, Asset, Price
+from collector.db import SessionLocal, Asset, Price
 
 API_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd"
 

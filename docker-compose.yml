@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: crypto_db
+    environment:
+      POSTGRES_DB: cryptodb
+      POSTGRES_USER: crypto_user
+      POSTGRES_PASSWORD: crypto_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    container_name: crypto_backend
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg2://crypto_user:crypto_pass@db:5432/cryptodb
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: crypto_frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+
+  collector:
+    build: ./collector
+    container_name: crypto_collector
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg2://crypto_user:crypto_pass@db:5432/cryptodb
+
+  alert_checker:
+    build: ./backend
+    container_name: crypto_alerts
+    depends_on:
+      - db
+    command: ["python", "alert_checker.py"]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://crypto_user:crypto_pass@db:5432/cryptodb
+
+volumes:
+  postgres_data:

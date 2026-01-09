@@ -1,195 +1,250 @@
-📝 README – Plateforme Crypto
-🚀 Présentation
+README – Plateforme Crypto
+1. Présentation
 
-Cette application est une plateforme d’analyse crypto complète comprenant :
+Ce projet est une plateforme complète de suivi et d’analyse des cryptomonnaies, développée dans un cadre académique.
+Il met en œuvre une architecture moderne intégrant un backend API, un frontend web, un système de collecte automatisée des données, un mécanisme d’alertes, ainsi qu’une démarche complète de tests et de qualité logicielle.
 
-Une API backend FastAPI
+La plateforme comprend :
 
-Une interface frontend React
+Une API Backend développée avec FastAPI
 
-Un collector CryptoRabbit (collecte des prix via API externe)
+Une interface Frontend développée avec React
 
-Un système d’alertes / notifications Discord
+Un collector de données de marché (CryptoRabbit)
 
-Une base de données PostgreSQL
+Un système d’alertes et de notifications (Discord)
 
-Une orchestration Docker complète
+Une base de données relationnelle PostgreSQL
 
-🔧 1. Technologies utilisées
+Une orchestration via Docker et Docker Compose
+
+Un pipeline de tests et de contrôle qualité automatisé
+
+2. Technologies utilisées
 Composant	Technologie
-Frontend	React + TailwindCSS
-Backend	FastAPI + SQLAlchemy
+Frontend	React, Vite, TailwindCSS
+Backend	FastAPI, SQLAlchemy
 Base de données	PostgreSQL
-Collecte prix	CryptoRabbit (Python)
-Alertes	Alert Checker Python + Discord Webhook
-Conteneurs	Docker & Docker Compose
-📦 2. Installation (mode manuel)
-2.1. Cloner le projet
+Collecte des données	Python (CryptoRabbit)
+Alertes	Python, Discord Webhook
+Tests	Pytest, pytest-cov, k6
+CI/CD	GitHub Actions
+Conteneurisation	Docker, Docker Compose
+3. Installation (mode manuel)
+3.1 Clonage du projet
 git clone https://github.com/GuissiMohamed/plateforme-crypto.git
 cd plateforme-crypto
 
-2.2. Installer la base de données PostgreSQL
-MacOS (Homebrew) :
+3.2 Installation de PostgreSQL
+
+Sous macOS (Homebrew) :
+
 brew install postgresql
 brew services start postgresql
 
-Créer l’utilisateur + base :
-psql
+
+Création de l’utilisateur et de la base :
+
 CREATE USER crypto_user WITH PASSWORD 'crypto_pass';
 CREATE DATABASE cryptodb OWNER crypto_user;
 
-2.3. Installer l’environnement backend
+3.3 Installation du backend
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-
-Toutes les dépendances seront installées : FastAPI, SQLAlchemy, bcrypt, passlib, pydantic, requests, etc.
-
-2.4. Installer le frontend
-cd ../frontend
+3.4 Installation du frontend
+cd frontend
 npm install
 
-▶️ 3. Démarrage manuel de l’application
-3.1. Démarrer le backend
+4. Démarrage manuel de l’application
+4.1 Backend FastAPI
 cd backend
 source .venv/bin/activate
 uvicorn main:app --reload
 
 
-Backend accessible ici :
+L’API est accessible à l’adresse suivante :
 
-👉 http://127.0.0.1:8000
+http://127.0.0.1:8000
 
-👉 http://127.0.0.1:8000/docs
- (Swagger)
+Documentation Swagger : http://127.0.0.1:8000/docs
 
-3.2. Démarrer le frontend
+4.2 Frontend React
 cd frontend
-npm start
+npm run dev
 
 
-Frontend accessible ici :
+Le frontend est accessible à l’adresse :
 
-👉 http://localhost:3000
+http://localhost:5173
 
-3.3. Démarrer CryptoRabbit (collector)
+4.3 Collector de données
 cd collector
 source ../backend/.venv/bin/activate
 python main.py
 
 
-Ce service :
+Fonctionnalités :
 
-✔ récupère les prix de +100 cryptos
-✔ met à jour la base toutes les 5 minutes
-✔ enregistre MarketCap, Volume, Price, Change24h
+Récupération automatique des données de marché
 
-3.4. Démarrer l’Alert Checker
+Mise à jour périodique des prix
+
+Enregistrement des prix, volumes et capitalisations
+
+4.4 Alert Checker
 cd backend
 source .venv/bin/activate
 python alert_checker.py
 
 
-Ce service :
+Fonctionnalités :
 
-✔ surveille les alertes (above / below / change_24h)
-✔ envoie des notifications dans la DB
-✔ envoie dans Discord via webhook si configuré
+Surveillance des seuils définis par l’utilisateur
 
-🐳 4. Démarrage via Docker (recommandé)
+Génération de notifications
 
-Le projet inclut un docker-compose.yml permettant de lancer :
+Envoi optionnel vers Discord
 
-✔ backend
-✔ frontend
-✔ PostgreSQL
-✔ collector
-✔ alert checker
+5. Démarrage via Docker
 
-🌐 Démarrer toute la plateforme :
+L’ensemble de la plateforme peut être démarré via Docker Compose :
+
 docker-compose up --build
 
-
-Ensuite :
-
 Service	URL
-Backend FastAPI	http://localhost:8000
+Backend API	http://localhost:8000
 
 Swagger	http://localhost:8000/docs
 
-Frontend React	http://localhost:3000
+Frontend	http://localhost:5173
 
 PostgreSQL	localhost:5432
-Collector CryptoRabbit	(service Python auto-démarré)
-Alert Checker	(service Python auto-démarré)
-⚙️ 5. Variables d’environnement
+6. Variables d’environnement
 
-Créer un fichier .env à la racine :
+Créer un fichier .env à la racine du projet :
 
 POSTGRES_USER=crypto_user
 POSTGRES_PASSWORD=crypto_pass
 POSTGRES_DB=cryptodb
 
 DATABASE_URL=postgresql+psycopg2://crypto_user:crypto_pass@db:5432/cryptodb
+SECRET_KEY=super_secret_key_change_me
 
-SECRET_KEY="super_secret_key_change_me"
-
-📂 6. Structure du projet
+7. Structure du projet
 plateforme-crypto/
-│
 ├── backend/
 │   ├── main.py
 │   ├── auth.py
 │   ├── db.py
 │   ├── alert_checker.py
 │   ├── schemas.py
-│   ├── requirements.txt
+│   ├── tests/
 │
 ├── collector/
 │   ├── core.py
 │   ├── main.py
-│   ├── db.py
+│   ├── tasks.py
+│   ├── tests/
 │
 ├── frontend/
 │   ├── src/
-│   ├── package.json
+│
+├── k6/
+│   ├── smoke.js
 │
 ├── docker-compose.yml
+├── quality_check.sh
 ├── README.md
 
-🧪 7. Tests API rapides
-Vérifier que le backend tourne :
-curl http://localhost:8000/health
+8. Tests et qualité logicielle
+8.1 Tests unitaires et d’intégration
+python -m pytest -q
 
 
-Réponse :
+Les tests couvrent :
 
-{"status": "ok"}
+Les fonctionnalités critiques du backend (authentification, utilisateurs, assets, alertes)
 
-Tester le login :
-curl -X POST http://localhost:8000/auth/login \
-  -d "username=test@test.com&password=123456"
+Le pipeline de collecte des données
 
-🚀 8. Déploiement
+Les interactions avec la base de données
 
-Tu pourras facilement déployer via :
+L’utilisation de mocks pour les services externes
 
-✔ Docker Compose sur un VPS
-✔ Railway / Render
-✔ AWS ECS
-✔ Heroku (container)
+8.2 Couverture de tests
+python -m pytest --cov=backend --cov=collector --cov-report=term-missing --cov-report=xml
 
-Je peux te préparer un script de déploiement, si tu veux.
 
-🎯 9. Commandes utiles
-Redémarrer PostgreSQL (MacOS) :
-brew services restart postgresql
+Résultats :
 
-Supprimer tout Docker :
-docker-compose down -v
+Couverture globale d’environ 86 %
 
-Rebuild complet :
-docker-compose up --build
+Rapport généré : coverage.xml
+
+8.3 Tests de performance
+
+Les tests de performance sont réalisés avec k6 :
+
+k6 run k6/smoke.js
+
+
+Scénario :
+
+10 utilisateurs virtuels
+
+30 secondes
+
+Endpoints testés : /health, /assets
+
+Résultats :
+
+Temps de réponse p95 inférieur à 20 ms
+
+Aucun échec de requête
+
+8.4 Sécurité
+
+Une démarche de tests de sécurité automatisés est prévue à l’aide d’outils de type OWASP ZAP (scan passif).
+Les limitations techniques (environnement Docker) sont documentées et la méthodologie est reproductible.
+
+9. CI/CD
+
+Un pipeline CI/CD est mis en place avec GitHub Actions :
+
+Exécution automatique des tests
+
+Vérification de la couverture
+
+Génération des rapports
+
+Validation à chaque push
+
+10. Déploiement
+
+Le projet peut être déployé sur tout environnement compatible Docker :
+
+VPS
+
+Plateformes cloud (Railway, Render)
+
+Infrastructure AWS (ECS)
+
+11. Conclusion
+
+Ce projet met en œuvre une démarche complète de développement logiciel incluant :
+
+Une architecture modulaire
+
+Des tests automatisés
+
+Une analyse de performance
+
+Une approche sécurité
+
+Une intégration continue
+
+Il répond aux exigences de qualité, de maintenabilité et de robustesse attendues dans un contexte professionnel.

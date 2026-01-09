@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/guississ/plateforme-crypto/collector/main.py", line 6, in <module>
+    from db import init_db
+  File "/Users/guississ/plateforme-crypto/collector/db.py", line 5, in <module>
+    from sqlalchemy import (
+ModuleNotFoundError: No module named 'sqlalchemy'
